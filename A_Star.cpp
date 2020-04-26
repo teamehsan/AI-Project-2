@@ -45,17 +45,17 @@ void actual_position(int& val, int& x, int& y) {
 
 	case 4:
 		x = 1;
-		y = 0;
+		y = 2;
 		break;
 
 	case 5:
-		x = 1;
-		y = 1;
+		x = 2;
+		y = 2;
 		break;
 
 	case 6:
-		x = 1;
-		y = 2;
+		x = 2;
+		y = 1;
 		break;
 
 	case 7:
@@ -64,8 +64,8 @@ void actual_position(int& val, int& x, int& y) {
 		break;
 
 	case 8:
-		x = 2;
-		y = 1;
+		x = 1;
+		y = 0;
 		break;
 
 	}
@@ -389,8 +389,9 @@ int main(){
 
 
     cout<<"\n\tEnter your choice of A* Algorithm Heuristic";
-    cout<<"\n\t1. A* with the Misplaced Tile heurisitic.";
+    cout<<"\n\t1. A* with the Misplaced Tile heurisitic.(H1)\n";
     cout<<"\n\t2. A* with the Manhattan Distance heuristic.\n";
+    //cout<<"\n\t3. A* with
 
     getline(cin,string_parse);
 
@@ -452,6 +453,10 @@ int main(){
         }
 
     }
+
+    cout << "\n";
+
+    Print_Node(node_queue.top()); // displays finished Node
 
     cout<<"\nDone!\n";
     cout<<"\nTo solve this problem the search algorithm expanded a total of "<<num_of_expanded_nodes<<" nodes.\n";
