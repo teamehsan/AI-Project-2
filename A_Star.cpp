@@ -4,14 +4,25 @@
 #include <vector>
 #include <sstream>
 #include <cmath>
-
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 using namespace std;
+
+template<typename T>
+T *vectorToArray(vector<vector<T> > const &v) {
+    T *rv = (T*)malloc((v.size()*v[0].size()) * sizeof(T)); //Assuming all rows have the same size
+    for (unsigned i = 0; i < v.size(); i++)
+        memcpy(rv + v[i].size() * i, &(v[i][0]), v[i].size() * sizeof(T));
+    return rv;
+}
+
 
 //H_n huerisitic functions for A*
 
 int Misplaced_Tile(vector<vector <int> > puzzle_state){
 
-   int H_n = 0;//H(n) value to be plugged into f(n) = H(n) + g(n)
+   int H_n = 0; //H(n) value to be plugged into f(n) = H(n) + g(n)
 
    for(int i = 0; i < puzzle_state.size(); i++){
        for(int j = 0; j < puzzle_state.at(i).size(); j++){
@@ -71,7 +82,116 @@ void actual_position(int& val, int& x, int& y) {
 	}
 };
 
+int Nilsson_Sequence(vector<vector <int> > puzzle_state, vector<vector <int> > goal_state) {
+    int i, cx, cy, ax, ay, h = 0, s, t;
+    int x = 0;
+    int y = 0;
+    int* current_puzzle = vectorToArray(puzzle_state);
+    int* goal_puzzle = vectorToArray(goal_state);
 
+    int correct_follower_to[9] =
+
+	{
+
+		0, 2, 3, // 1 2 3
+
+		4, 5, 6, // 8 0 4
+
+		7, 8, 1, // 7 5 4
+
+	};
+
+	int clockwise_tile_of[ 9 ] =
+
+	{
+
+		1, 2, 5, // 1 2 3 // 0 1 2
+
+		0,-1, 8, // 8 0 4 // 3 4 5
+
+		3, 6, 7  // 7 6 5 // 6 7 8
+
+	};
+
+    int tile_x[ 9 ] =
+
+	{
+
+		1, 0, 1, // 1 2 3
+
+		2, 2, 2, // 8 0 4
+
+		1, 0, 0, // 7 6 5
+
+	};
+
+	int tile_y[ 9 ] =
+
+	{
+
+		1, 0, 0,
+
+		0, 1, 2,
+
+		2, 2, 1,
+
+	};
+
+	s = 0;
+
+	if (current_puzzle[5] != goal_puzzle[5])
+	{
+
+ 		s = 1;
+
+	}
+
+	for( i=0; i < 9; i++ )
+
+	{
+
+		if( current_puzzle[i] == 0 )
+
+		{
+
+			continue;
+
+		}
+
+		cx = tile_x[current_puzzle[i]];
+
+		cy = tile_y[current_puzzle[i]];
+
+		ax = i % 3;
+
+		ay = i / 3;
+
+		h += abs( cx-ax );
+
+		h += abs( cy-ay );
+
+
+		if( (ax == (3/2)) && (ay == (3/2)) )
+
+		{
+
+			continue;
+
+		}
+
+		if( correct_follower_to[current_puzzle[i]] != current_puzzle[clockwise_tile_of[i]])
+
+		{
+
+			s += 2;
+
+		}
+
+	}
+
+    t = h + (3*s);
+    return t;
+}
 
 int Manhattan_Distance(vector<vector <int> > puzzle_state){
 
@@ -81,9 +201,6 @@ int Manhattan_Distance(vector<vector <int> > puzzle_state){
     for(int i = 0; i < puzzle_state.size(); i++){
        for(int j = 0; j < puzzle_state.at(i).size(); j++){
            if(puzzle_state.at(i).at(j) != 0){
-               //H_n += abs(   ((puzzle_state.at(i).at(j) - 1) / (puzzle_state.at(i).size())) - i   )  + abs(   ((puzzle_state.at(i).at(j) - 1) % (puzzle_state.at(i).size())) - j   );
-
-               //H_n +=   abs(((puzzle_state.at(i).at(j) - 1) / (puzzle_state.at(i).size())) - i)  +   abs(((puzzle_state.at(i).at(j) - 1) % (puzzle_state.at(i).size())) - j);
                 actual_position(puzzle_state.at(i).at(j),act_x,act_y);
                 H_n += abs(i-act_x) +abs(j-act_y);
 
@@ -102,7 +219,7 @@ struct Node{
     vector <vector <int> > puzzle_box;
 
     int G_n;//g(n) is effectively the depth
-    int H_n;//H(n) is iether 1, manhatan distance or mispalce tile huerisitcs
+    int H_n;//H(n) is either misplace, manhattan, combo, or Nilsson sequence huerisitcs
 
     Node(vector <vector <int> > puzzle_box, int G_n, int H_n): puzzle_box(puzzle_box), G_n(G_n), H_n(H_n){
 
@@ -155,6 +272,20 @@ bool Puzzle_Repeated(vector<Node> &node_list, Node a){
 
 int get_H_n(int puzzle_heuristic, vector< vector<int> > puzzle_board){
 
+    vector<vector<int> > goal_board (3);
+
+    goal_board.at(0).push_back(1);
+    goal_board.at(0).push_back(2);
+    goal_board.at(0).push_back(3);
+    goal_board.at(1).push_back(8);
+    goal_board.at(1).push_back(0);
+    goal_board.at(1).push_back(4);
+    goal_board.at(2).push_back(7);
+    goal_board.at(2).push_back(6);
+    goal_board.at(2).push_back(5);
+
+    int puzzle_heuristic_value = 0;
+
     if( puzzle_heuristic == 1){
 
         return Misplaced_Tile(puzzle_board);
@@ -163,7 +294,15 @@ int get_H_n(int puzzle_heuristic, vector< vector<int> > puzzle_board){
 
         return Manhattan_Distance(puzzle_board);
 
-    }else{
+    }else if ( puzzle_heuristic == 3) {
+        puzzle_heuristic_value = Misplaced_Tile(puzzle_board);
+        puzzle_heuristic_value += Manhattan_Distance(puzzle_board);
+
+        return puzzle_heuristic_value;
+    } else if ( puzzle_heuristic == 4) {
+        return Nilsson_Sequence(puzzle_board, goal_board);
+
+    } else{
 
         cout<<"ERROR: PUZZLE HEURISITIC NO WITHIN RANGE. Exiting";
 
@@ -204,8 +343,6 @@ void Generate_Next_Nodes( priority_queue<Node, vector<Node>, Compare_Nodes> &nod
     //move empty tile up
 
     if(zero_y-1 >=0){
-
-        //temp_swap = new_puzzle_box.at(zero_y).at(zero_x);
 
         up.at(zero_y).at(zero_x) = up.at(zero_y -1).at(zero_x);
         up.at(zero_y-1).at(zero_x) = 0;
@@ -295,11 +432,6 @@ void Print_Node(Node a){
 }
 
 
-
-
-
-
-
 int main(){
 
     string string_parse;
@@ -310,20 +442,8 @@ int main(){
     int goal_node_depth;
     int num_of_expanded_nodes = 0;
 
-    vector<vector<int> > input_puzzle (3);//TODO: change hardcoding to softcoding hwere size of array can be anything
+    vector<vector<int> > input_puzzle (3);
     vector<Node> node_list;
-    vector< vector<int> > default_puzzle (3);
-
-    default_puzzle.at(0).push_back(1);
-    default_puzzle.at(0).push_back(2);
-    default_puzzle.at(0).push_back(3);
-    default_puzzle.at(1).push_back(4);
-    default_puzzle.at(1).push_back(0);
-    default_puzzle.at(1).push_back(6);
-    default_puzzle.at(2).push_back(7);
-    default_puzzle.at(2).push_back(5);
-    default_puzzle.at(2).push_back(8);
-
     vector<vector<int> > goal_puzzle (3);
 
     goal_puzzle.at(0).push_back(1);
@@ -389,9 +509,10 @@ int main(){
 
 
     cout<<"\n\tEnter your choice of A* Algorithm Heuristic";
-    cout<<"\n\t1. A* with the Misplaced Tile heurisitic.(H1)\n";
-    cout<<"\n\t2. A* with the Manhattan Distance heuristic.\n";
-    //cout<<"\n\t3. A* with
+    cout<<"\n\t1. A* with the Misplaced Tile heuristic(H1).\n";
+    cout<<"\n\t2. A* with the Manhattan Distance heuristic(H2).\n";
+    cout<<"\n\t3. A* with Misplaced Tile and Manhattan(H3).\n";
+    cout<<"\n\t4. A* with Nilsson Sequence Heuristic(H4).\n";
 
     getline(cin,string_parse);
 
@@ -436,7 +557,7 @@ int main(){
 
         Print_Node(min);
 
-        cout<<"Expanding this node...\n";
+        cout<<"\nExpanding this node...\n";
 
         }
 
