@@ -19,17 +19,6 @@
 #include <string.h>
 using namespace std;
 
-// Used for placing 2S vector into 1D Array
-
-template<typename T>
-T *vectorToArray(vector<vector<T> > const &v) {
-    T *rv = (T*)malloc((v.size()*v[0].size()) * sizeof(T)); //Assuming all rows have the same size
-    for (unsigned i = 0; i < v.size(); i++)
-        memcpy(rv + v[i].size() * i, &(v[i][0]), v[i].size() * sizeof(T));
-    return rv;
-}
-
-
 //H_n huerisitic functions for A*
 
 int Misplaced_Tile(vector<vector <int> > puzzle_state){
@@ -94,117 +83,6 @@ void actual_position(int& val, int& x, int& y) {
 	}
 };
 
-int Nilsson_Sequence(vector<vector <int> > puzzle_state, vector<vector <int> > goal_state) {
-    int i, cx, cy, ax, ay, h = 0, s, t;
-    int x = 0;
-    int y = 0;
-    int* current_puzzle = vectorToArray(puzzle_state);
-    int* goal_puzzle = vectorToArray(goal_state);
-
-    int correct_follower_to[9] =
-
-	{
-
-		0, 2, 3, // 1 2 3
-
-		4, 5, 6, // 8 0 4
-
-		7, 8, 1, // 7 5 4
-
-	};
-
-	int clockwise_tile_of[ 9 ] =
-
-	{
-
-		1, 2, 5, // 1 2 3 // 0 1 2
-
-		0,-1, 8, // 8 0 4 // 3 4 5
-
-		3, 6, 7  // 7 6 5 // 6 7 8
-
-	};
-
-    int tile_x[ 9 ] =
-
-	{
-
-		1, 0, 1, // 1 2 3
-
-		2, 2, 2, // 8 0 4
-
-		1, 0, 0, // 7 6 5
-
-	};
-
-	int tile_y[ 9 ] =
-
-	{
-
-		1, 0, 0,
-
-		0, 1, 2,
-
-		2, 2, 1,
-
-	};
-
-	s = 0;
-
-	if (current_puzzle[5] != goal_puzzle[5])
-	{
-
- 		s = 1;
-
-	}
-
-	for( i=0; i < 9; i++ )
-
-	{
-
-		if( current_puzzle[i] == 0 )
-
-		{
-
-			continue;
-
-		}
-
-		cx = tile_x[current_puzzle[i]];
-
-		cy = tile_y[current_puzzle[i]];
-
-		ax = i % 3;
-
-		ay = i / 3;
-
-		h += abs( cx-ax );
-
-		h += abs( cy-ay );
-
-
-		if( (ax == (3/2)) && (ay == (3/2)) )
-
-		{
-
-			continue;
-
-		}
-
-		if( correct_follower_to[current_puzzle[i]] != current_puzzle[clockwise_tile_of[i]])
-
-		{
-
-			s += 2;
-
-		}
-
-	}
-
-    t = h + (3*s);
-    return t;
-}
-
 int Manhattan_Distance(vector<vector <int> > puzzle_state){
 
     int H_n = 0;
@@ -223,6 +101,159 @@ int Manhattan_Distance(vector<vector <int> > puzzle_state){
    }
     return H_n;
 };
+
+int countclockWiseSuccessors(vector<vector <int> > puzzle_state)
+
+{
+
+    int i=0,j=0,count=0;
+
+    //int start=puzzle_state.at(i).at(j);;
+
+    int limit=0;
+
+    int num1=0,num2=0,x1=0,x2=0,y1=0,y2=0;
+
+
+
+    while(limit<9)
+
+    {
+
+
+
+        if(puzzle_state.at(i).at(j) != 0){
+
+            num1==puzzle_state.at(i).at(j);
+
+            if(i==0 && j<2)
+
+            {
+
+                j++;
+
+            }
+
+            else if(j==2 && i<2)
+
+            {
+
+                i++;
+
+            }
+
+            else if(i==2 && j>0)
+
+            {
+
+                j--;
+
+            }
+
+            else if(j==0 && i>0)
+
+            {
+
+                i--;
+
+            }
+
+            num2==puzzle_state.at(i).at(j);
+
+            actual_position(num1,x1,y1);
+
+            actual_position(num2,x2,y2);
+
+            if(x1==0 && y1<2 )
+
+            {
+
+                if(y2!=(y1+1))
+
+                {
+
+                    count++;
+
+                }
+
+            }
+
+            else if(x1<2 && y1==2)
+
+            {
+
+                if(x2!=x1+1)
+
+                {
+
+                    count++;
+
+                }
+
+            }
+
+            else if(x1==2 && y1>0)
+
+            {
+
+                if(y2!=y1-1)
+
+                {
+
+                    count++;
+
+                }
+
+            }
+
+            else if(y1==0 && x1>0)
+            {
+
+                if(x2!=x1-1)
+
+                {
+
+                    count++;
+
+                }
+
+            }
+
+        }
+
+        limit++;
+
+    }
+
+
+
+    return count;
+
+    //return clockWiseSuccessors;
+
+}
+
+int Nilssons_Sequence_Score(vector<vector <int> > puzzle_state){
+
+    int manhattanDistances= Manhattan_Distance(puzzle_state); //calculating manhattan distance
+    int count=countclockWiseSuccessors(puzzle_state);
+    int centre=0;
+
+    if(puzzle_state.at(1).at(1)!=0)
+
+    {
+
+        centre=1;
+
+    }
+
+    int score=3*(centre+(2*count));
+
+    score=score+manhattanDistances;
+
+    return score;
+
+}
 
 //Node struct and node comparison for the Priority Queue
 
@@ -312,7 +343,7 @@ int get_H_n(int puzzle_heuristic, vector< vector<int> > puzzle_board){
 
         return puzzle_heuristic_value;
     } else if ( puzzle_heuristic == 4) {
-        return Nilsson_Sequence(puzzle_board, goal_board);
+        return Nilssons_Sequence_Score(puzzle_board);
 
     } else{
 
