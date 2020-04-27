@@ -1,3 +1,13 @@
+//  8-Puzzle Program with A* Algorithm
+//
+//  Team Members:
+//  Guillermo Gomez
+//  Ehsan Alizadeh
+//  CS-4346: Inro to Artificial Intelligence
+//  Prof. Moonis Ali
+//  4/27/2020
+//
+
 #include <iostream>
 #include <string>
 #include <queue>
@@ -8,6 +18,8 @@
 #include <stdio.h>
 #include <string.h>
 using namespace std;
+
+// Used for placing 2S vector into 1D Array
 
 template<typename T>
 T *vectorToArray(vector<vector<T> > const &v) {
@@ -585,5 +597,4 @@ int main(){
     cout<<"The depth of the goal node was "<<goal_node.G_n<<".\n";
 
     return 0;
-
 }
